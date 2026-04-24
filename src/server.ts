@@ -1,6 +1,6 @@
 // src/server.ts — Application entry point
 import "dotenv/config";
-import "./config"; // validate env vars at startup
+import "./config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -13,80 +13,110 @@ import { swaggerDefinition } from "./swagger/swagger";
 import { errorHandler, notFound } from "./middleware/error.middleware";
 import { logger } from "./lib/logger";
 
-import authRoutes    from "./routes/auth.routes";
-import userRoutes    from "./routes/user.routes";
-import roleRoutes    from "./routes/role.routes";
-import auditRoutes   from "./routes/audit.routes";
-import deviceRoutes  from "./routes/device.routes";
-import openidRoutes  from "./routes/openid.routes";
+import authRoutes from "./routes/auth.routes";
+import userRoutes from "./routes/user.routes";
+import roleRoutes from "./routes/role.routes";
+import auditRoutes from "./routes/audit.routes";
+import deviceRoutes from "./routes/device.routes";
+import openidRoutes from "./routes/openid.routes";
 import { discovery } from "./openid/well-known";
 
 const app = express();
 
-// ── Core middleware ────────────────────────────────────────────────────────────
+// ── Core middleware ─────────────────────────────────────────────
 app.set("trust proxy", 1);
+
 app.use(helmet());
-app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(",") ?? "*", credentials: true }));
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan("combined", { stream: { write: msg => logger.http(msg.trim()) } }));
 
-app.use(rateLimit({
-  windowMs:       15 * 60 * 1000,
-  max:            100,
-  standardHeaders: true,
-  legacyHeaders:  false,
-  message:        { error: "RATE_LIMITED", message: "Too many requests, please try again later" },
-}));
-
-// ── Routes ────────────────────────────────────────────────────────────────────
-app.use("/api/v1/auth",    authRoutes);
-app.use("/api/v1/users",   userRoutes);
-app.use("/api/v1/roles",   roleRoutes);
-app.use("/api/v1/audit",   auditRoutes);
-app.use("/api/v1/devices", deviceRoutes);
-app.use("/api/v1/openid",  openidRoutes);
-app.get("/.well-known/openid-configuration", discovery);
-
-app.get("/", (_req, res) =>
-  res.json({ project: "SecureAccess", version: "2.0.0", docs: "/api-docs", status: "OK" })
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(",") ?? "*",
+    credentials: true,
+  })
 );
 
-// ── Swagger docs ───────────────────────────────────────────────────────────────
-const specs = swaggerJSDoc({
-  definition: swaggerDefinition,
-  apis: [
-    "./src/routes/*.ts",
-    "./src/controllers/*.ts",
-    "./dist/routes/*.js",
-    "./dist/controllers/*.js",
-  ],
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  morgan("combined", {
+    stream: { write: (msg) => logger.http(msg.trim()) },
+  })
+);
+
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      error: "RATE_LIMITED",
+      message: "Too many requests, please try again later",
+    },
+  })
+);
+
+// ── Routes ──────────────────────────────────────────────────────
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/roles", roleRoutes);
+app.use("/api/v1/audit", auditRoutes);
+app.use("/api/v1/devices", deviceRoutes);
+app.use("/api/v1/openid", openidRoutes);
+
+app.get("/.well-known/openid-configuration", discovery);
+
+app.get("/", (_req, res) => {
+  res.json({
+    project: "SecureAccess",
+    version: "2.0.0",
+    docs: "/api-docs",
+    status: "OK",
+  });
 });
 
-// Explicit JSON spec endpoint (useful for debugging & external UIs)
-app.get("/api-docs.json", (_req, res) => res.json(specs));
+// ── Swagger docs (FIXED for Vercel) ─────────────────────────────
+const specs = swaggerJSDoc({
+  definition: swaggerDefinition,
+  apis: ["./src/routes/*.ts", "./src/controllers/*.ts"],
+});
 
-// Serve Swagger UI — CDN CSS avoids static file issues in serverless environments
-const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui.min.css";
+const swaggerOptions = {
+  explorer: true,
+  customCss: `
+    .swagger-ui .opblock .opblock-summary-path-description-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 10px;
+      padding: 0 10px;
+      width: 100%;
+    }
+  `,
+};
 
-app.use("/api-docs", swaggerUi.serve);
-app.get("/api-docs", swaggerUi.setup(specs, {
-  explorer: false,
-  customCssUrl: CSS_URL,
-  customCss:
-    ".swagger-ui .opblock .opblock-summary-path-description-wrapper { align-items: center; display: flex; flex-wrap: wrap; gap: 0 10px; padding: 0 10px; width: 100%; }",
-}));
+app.use(
+  "/api-docs",
+  swaggerUi.serveFiles(specs),
+  swaggerUi.setup(specs, swaggerOptions)
+);
 
-// ── Error handling (MUST be last) ─────────────────────────────────────────────
+app.get("/swagger.json", (_req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(specs);
+});
+
+// ── Error handling ──────────────────────────────────────────────
 app.use(notFound);
 app.use(errorHandler);
 
+// ── Server config ───────────────────────────────────────────────
 const PORT = process.env.PORT ?? 4000;
 
 let server: any;
 let isRestarting = false;
 
-// ── Server start function ──────────────────────────────────────────────────────
+// ── Start server ────────────────────────────────────────────────
 const startServer = (retryCount = 0, maxRetries = 3) => {
   try {
     server = app.listen(PORT, () => {
@@ -95,11 +125,11 @@ const startServer = (retryCount = 0, maxRetries = 3) => {
       logger.info(`Swagger UI: http://localhost:${PORT}/api-docs`);
     });
 
-    // Handle server errors
     server.on("error", (err: any) => {
       logger.error("Server error:", err);
+
       if (err.code === "EADDRINUSE") {
-        logger.error(`Port ${PORT} is already in use. Attempting restart...`);
+        logger.error(`Port ${PORT} is already in use. Restarting...`);
         setTimeout(() => restartServer(), 2000);
       } else {
         logger.error("Critical server error. Restarting...");
@@ -108,17 +138,18 @@ const startServer = (retryCount = 0, maxRetries = 3) => {
     });
   } catch (err) {
     logger.error("Failed to start server:", err);
+
     if (retryCount < maxRetries) {
-      logger.info(`Retry attempt ${retryCount + 1}/${maxRetries}...`);
+      logger.info(`Retry ${retryCount + 1}/${maxRetries}...`);
       setTimeout(() => startServer(retryCount + 1, maxRetries), 3000);
     } else {
-      logger.error("Max retry attempts reached. Exiting...");
+      logger.error("Max retries reached. Exiting...");
       process.exit(1);
     }
   }
 };
 
-// ── Restart function ──────────────────────────────────────────────────────────
+// ── Restart logic ───────────────────────────────────────────────
 const restartServer = () => {
   if (isRestarting) {
     logger.warn("Restart already in progress...");
@@ -130,14 +161,13 @@ const restartServer = () => {
 
   if (server) {
     server.close(() => {
-      logger.info("Server closed. Starting new instance...");
+      logger.info("Server closed. Restarting...");
       setTimeout(() => startServer(), 1000);
     });
 
-    // Force close after 5 seconds if graceful shutdown fails
     setTimeout(() => {
       if (isRestarting) {
-        logger.error("Forced shutdown of server");
+        logger.error("Forced shutdown");
         process.exit(1);
       }
     }, 5000);
@@ -146,64 +176,39 @@ const restartServer = () => {
   }
 };
 
-// ── Global error handlers ──────────────────────────────────────────────────────
-// Only restart for critical errors, not validation/user errors
+// ── Critical error detection ────────────────────────────────────
 const isCriticalError = (err: any): boolean => {
-  // Don't restart for validation or user input errors
   if (err?.code === "VALIDATION_ERROR") return false;
-  if (err?.statusCode === 400 || err?.statusCode === 401 || err?.statusCode === 403) return false;
-  
-  // Restart for system/database/critical errors
+  if ([400, 401, 403].includes(err?.statusCode)) return false;
   return true;
 };
 
+// ── Global error handlers ───────────────────────────────────────
 process.on("uncaughtException", (err: Error) => {
   logger.error("Uncaught Exception:", err);
-  logger.error("Stack:", err.stack);
-  if (isCriticalError(err)) {
-    logger.error("Critical error detected. Restarting server...");
-    restartServer();
-  } else {
-    logger.warn("Non-critical error. Server will continue running.");
-  }
+  if (isCriticalError(err)) restartServer();
 });
 
-process.on("unhandledRejection", (reason: any, promise: Promise<any>) => {
-  logger.warn("Unhandled Rejection at:", promise);
-  logger.warn("Reason:", reason);
-  if (isCriticalError(reason)) {
-    logger.error("Critical error detected. Restarting server...");
-    restartServer();
-  } else {
-    logger.warn("Non-critical rejection. Server will continue running.");
-  }
+process.on("unhandledRejection", (reason: any) => {
+  logger.error("Unhandled Rejection:", reason);
+  if (isCriticalError(reason)) restartServer();
 });
 
-// ── Graceful shutdown ──────────────────────────────────────────────────────────
+// ── Graceful shutdown ───────────────────────────────────────────
 process.on("SIGTERM", () => {
-  logger.info("SIGTERM signal received: closing HTTP server");
-  if (server) {
-    server.close(() => {
-      logger.info("HTTP server closed");
-      process.exit(0);
-    });
-  }
+  logger.info("SIGTERM received");
+  server?.close(() => process.exit(0));
 });
 
 process.on("SIGINT", () => {
-  logger.info("SIGINT signal received: closing HTTP server");
-  if (server) {
-    server.close(() => {
-      logger.info("HTTP server closed");
-      process.exit(0);
-    });
-  }
+  logger.info("SIGINT received");
+  server?.close(() => process.exit(0));
 });
 
-// Only start the HTTP server in non-serverless environments
+// ── Export for Vercel ───────────────────────────────────────────
+export default app;
+
+// ── Start only if NOT Vercel ────────────────────────────────────
 if (!process.env.VERCEL) {
   startServer();
 }
-
-export { app, restartServer, startServer };
-export default app;
