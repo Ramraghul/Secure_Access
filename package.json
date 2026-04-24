@@ -6,12 +6,13 @@
   "license": "MIT",
   "scripts": {
     "dev":     "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build":   "tsc",
+    "build":   "prisma generate && tsc",
     "start":   "node dist/server.js",
     "seed":    "ts-node prisma/seed.ts",
     "migrate": "prisma migrate dev",
     "studio":  "prisma studio",
-    "generate":"prisma generate"
+    "generate":"prisma generate",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client":          "^5.22.0",
