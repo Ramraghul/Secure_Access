@@ -78,29 +78,27 @@ app.get("/", (_req, res) => {
 });
 
 // ── Swagger docs (FIXED for Vercel) ─────────────────────────────
-const specs = swaggerJSDoc({
-  definition: swaggerDefinition,
-  apis: [
-    path.join(process.cwd(), "dist/routes/*.js"),
-    path.join(process.cwd(), "dist/controllers/*.js"),
-  ],
-});
+let specs: any;
 
-const swaggerOptions = {
-  explorer: true,
-
-  customCssUrl: "https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
-
-  customCss: `
-    .swagger-ui .opblock .opblock-summary-path-description-wrapper {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0 10px;
-      padding: 0 10px;
-      width: 100%;
-    }
-  `,
-};
+try {
+  specs = swaggerJSDoc({
+    definition: swaggerDefinition,
+    apis: [
+      path.join(__dirname, "routes/*.ts"),
+      path.join(__dirname, "controllers/*.ts"),
+    ],
+  });
+  
+  // Fallback: ensure specs has required fields
+  if (!specs.paths) {
+    specs.paths = {};
+  }
+} catch (error) {
+  logger.error("Failed to generate Swagger specs:", error);
+  // Fallback specs object
+  specs = swaggerDefinition;
+  specs.paths = {};
+}
 
 app.get("/swagger.json", (_req, res) => {
   res.setHeader("Content-Type", "application/json");
@@ -112,10 +110,9 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(specs, {
     explorer: true,
-
-    customCssUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.min.css",
-
+    swaggerOptions: {
+      url: "/swagger.json",
+    },
     customCss: `
       .swagger-ui .topbar { display: none }
       body { background: #fafafa; }
