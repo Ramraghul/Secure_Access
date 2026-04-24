@@ -55,9 +55,20 @@ app.get("/", (_req, res) =>
 // ── Swagger docs ───────────────────────────────────────────────────────────────
 const specs = swaggerJSDoc({
   definition: swaggerDefinition,
-  apis: ["./src/routes/*.ts", "./src/controllers/*.ts"],
+  apis: [
+    "./src/routes/*.ts",
+    "./src/controllers/*.ts",
+    "./dist/routes/*.js",
+    "./dist/controllers/*.js",
+  ],
 });
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs, { explorer: false }));
+
+// Explicit JSON spec endpoint (useful for debugging & external UIs)
+app.get("/api-docs.json", (_req, res) => res.json(specs));
+
+// Serve Swagger UI — split serve/setup for better serverless compatibility
+app.use("/api-docs", swaggerUi.serve);
+app.get("/api-docs", swaggerUi.setup(specs, { explorer: false }));
 
 // ── Error handling (MUST be last) ─────────────────────────────────────────────
 app.use(notFound);
