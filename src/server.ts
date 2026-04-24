@@ -110,12 +110,16 @@ app.get("/swagger.json", (_req, res) => {
 app.use(
   "/api-docs",
   swaggerUi.serve,
-  swaggerUi.setup(undefined, {
+  swaggerUi.setup(specs, {
     explorer: true,
-    swaggerOptions: {
-      url: "/swagger.json",
-    },
-    customCssUrl: "https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
+
+    customCssUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.min.css",
+
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      body { background: #fafafa; }
+    `,
   })
 );
 
