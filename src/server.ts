@@ -102,16 +102,22 @@ const swaggerOptions = {
   `,
 };
 
-app.use(
-  "/api-docs",
-  swaggerUi.serveFiles(specs),
-  swaggerUi.setup(specs, swaggerOptions)
-);
-
 app.get("/swagger.json", (_req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(specs);
 });
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(undefined, {
+    explorer: true,
+    swaggerOptions: {
+      url: "/swagger.json",
+    },
+    customCssUrl: "https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
+  })
+);
 
 // ── Error handling ──────────────────────────────────────────────
 app.use(notFound);
