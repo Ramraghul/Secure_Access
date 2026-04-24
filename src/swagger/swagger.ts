@@ -9,7 +9,7 @@ export const swaggerDefinition = {
   },
   servers: [
     { url: "http://localhost:4000/api/v1", description: "Local Development" },
-    { url: "https://api.secureaccess.ca/v1", description: "Production" },
+    { url: "https://secure-access-kappa.vercel.app/api/v1", description: "Production" },
   ],
   tags: [
     { name: "Authentication", description: "User registration, login, MFA, and profile management" },
