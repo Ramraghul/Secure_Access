@@ -13,6 +13,6 @@
     "declaration":   true,
     "typeRoots":     ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*", "prisma/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "prisma"]
 }
