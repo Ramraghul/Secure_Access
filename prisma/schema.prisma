@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String     @id @default(uuid())
+  email               String     @unique
+  passwordHash        String
+  firstName           String
+  lastName            String
+  isActive            Boolean    @default(true)
+  mfaEnabled          Boolean    @default(false)
+  mfaSecret           String?
+  backupCodesHashed   String?    // JSON array of bcrypt-hashed backup codes
+  roles               UserRole[]
+  devices             Device[]
+  auditLogs           AuditLog[]
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@map("users")
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  permissions Permission[]
+  users       UserRole[]
+  createdAt   DateTime     @default(now())
+
+  @@map("roles")
+}
+
+model Permission {
+  id       String @id @default(uuid())
+  action   String
+  resource String
+  roleId   String
+  role     Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([action, resource, roleId])
+  @@index([roleId])
+  @@map("permissions")
+}
+
+model UserRole {
+  userId     String
+  roleId     String
+  assignedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Device {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent   String
+  ipAddress   String
+  deviceName  String
+  fingerprint String
+  isTrusted   Boolean  @default(false)
+  firstUsedAt DateTime @default(now())
+  lastUsedAt  DateTime @default(now())
+
+  @@unique([userId, fingerprint], name: "userId_fingerprint")
+  @@index([userId])
+  @@map("devices")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  resource  String
+  ipAddress String
+  userAgent String
+  metadata  Json?
+  timestamp DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([action])
+  @@index([resource])
+  @@map("audit_logs")
+}
