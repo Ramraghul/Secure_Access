@@ -8,7 +8,7 @@ const { combine, timestamp, errors, json, colorize, simple } = format;
 
 const isDev = process.env.NODE_ENV !== "production";
 
-const LOG_DIR = process.env.LOG_DIR ?? "logs";
+const LOG_DIR = process.env.LOG_DIR ?? (process.env.VERCEL ? "/tmp/logs" : "logs");
 
 function isWritable(dir: string): boolean {
   try {
