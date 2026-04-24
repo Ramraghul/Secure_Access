@@ -84,6 +84,9 @@ const specs = swaggerJSDoc({
 
 const swaggerOptions = {
   explorer: true,
+
+  customCssUrl: "https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
+
   customCss: `
     .swagger-ui .opblock .opblock-summary-path-description-wrapper {
       display: flex;
