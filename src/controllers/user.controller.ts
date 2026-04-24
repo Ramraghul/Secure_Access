@@ -6,7 +6,10 @@ import { validate, PaginationSchema } from "../utils/validation";
 import { prisma } from "../lib/prisma";
 
 export const listUsers = async (req: Request, res: Response): Promise<void> => {
-  const { page, limit, search } = validate(PaginationSchema, req.query);
+  const validated = validate(PaginationSchema, req.query);
+  const page = validated.page || 1;
+  const limit = validated.limit || 50;
+  const search = validated.search;
   const skip = (page - 1) * limit;
 
   const where = search

@@ -82,9 +82,9 @@ export const auditLog = (req: Request, res: Response, next: NextFunction): void 
           method:          req.method,
           statusCode:      res.statusCode,
           durationMs:      Date.now() - start,
-          requestBody:     safeBody,
+          requestBody:     safeBody ?? null,
           responseSnippet: parseResponseSnippet(data),
-        },
+        } as any,
         timestamp: new Date(),
       },
     }).catch(err => logger.error("Audit log write failed", { err, requestId }));
