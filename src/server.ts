@@ -20,6 +20,7 @@ import auditRoutes from "./routes/audit.routes";
 import deviceRoutes from "./routes/device.routes";
 import openidRoutes from "./routes/openid.routes";
 import { discovery } from "./openid/well-known";
+import path from "path";
 
 const app = express();
 
@@ -79,7 +80,10 @@ app.get("/", (_req, res) => {
 // ── Swagger docs (FIXED for Vercel) ─────────────────────────────
 const specs = swaggerJSDoc({
   definition: swaggerDefinition,
-  apis: ["./src/routes/*.ts", "./src/controllers/*.ts"],
+  apis: [
+    path.join(process.cwd(), "dist/routes/*.js"),
+    path.join(process.cwd(), "dist/controllers/*.js"),
+  ],
 });
 
 const swaggerOptions = {
