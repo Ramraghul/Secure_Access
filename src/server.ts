@@ -182,7 +182,10 @@ process.on("SIGINT", () => {
   }
 });
 
-// Start the server
-startServer();
+// Only start the HTTP server in non-serverless environments
+if (!process.env.VERCEL) {
+  startServer();
+}
 
 export { app, restartServer, startServer };
+export default app;
