@@ -66,9 +66,16 @@ const specs = swaggerJSDoc({
 // Explicit JSON spec endpoint (useful for debugging & external UIs)
 app.get("/api-docs.json", (_req, res) => res.json(specs));
 
-// Serve Swagger UI — split serve/setup for better serverless compatibility
+// Serve Swagger UI — CDN CSS avoids static file issues in serverless environments
+const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui.min.css";
+
 app.use("/api-docs", swaggerUi.serve);
-app.get("/api-docs", swaggerUi.setup(specs, { explorer: false }));
+app.get("/api-docs", swaggerUi.setup(specs, {
+  explorer: false,
+  customCssUrl: CSS_URL,
+  customCss:
+    ".swagger-ui .opblock .opblock-summary-path-description-wrapper { align-items: center; display: flex; flex-wrap: wrap; gap: 0 10px; padding: 0 10px; width: 100%; }",
+}));
 
 // ── Error handling (MUST be last) ─────────────────────────────────────────────
 app.use(notFound);
