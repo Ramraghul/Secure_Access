@@ -425,16 +425,7 @@ export const swaggerDefinition = {
       "required": true,
       "content": {
         "application/json": {
-          "schema": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/LoginRequest"
-              },
-              {
-                "$ref": "#/components/schemas/LoginRequestWithMFA"
-              }
-            ]
-          }
+          "schema": { "$ref": "#/components/schemas/LoginRequest" }
         }
       }
     },
