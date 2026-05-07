@@ -146,3 +146,317 @@ curl http://localhost:4000/api/v1/auth/me \
 | Config | `process.env` scattered everywhere | Centralised `src/config/index.ts` |
 | Logging | `console.log` | Winston structured logger with daily rotating files |
 | Schema | `backupCodesRaw` (wrong name, no index) | `backupCodesHashed` + proper indexes on all query paths |
+
+
+---
+
+# System Architecture
+
+```text
+                               ┌──────────────────────┐
+                               │      Frontend        │
+                               │ React / Next.js App  │
+                               └──────────┬───────────┘
+                                          │
+                                          │ HTTPS Requests
+                                          ▼
+                    ┌───────────────────────────────────────┐
+                    │        Express API Gateway            │
+                    │     Node.js + TypeScript Backend      │
+                    └────────────────┬──────────────────────┘
+                                     │
+         ┌───────────────────────────┼───────────────────────────┐
+         │                           │                           │
+         ▼                           ▼                           ▼
+
+┌───────────────────┐    ┌────────────────────┐    ┌───────────────────┐
+│ Auth Middleware   │    │ Validation Layer   │    │ Audit Middleware  │
+│ JWT Verification  │    │ Zod Schemas        │    │ Action Tracking   │
+└─────────┬─────────┘    └─────────┬──────────┘    └─────────┬─────────┘
+          │                        │                         │
+          └────────────────────────┼─────────────────────────┘
+                                   ▼
+
+                 ┌────────────────────────────────┐
+                 │        Business Services       │
+                 │────────────────────────────────│
+                 │ Auth Service                   │
+                 │ MFA Service                    │
+                 │ Device Trust Service           │
+                 │ RBAC Service                   │
+                 │ Audit Service                  │
+                 │ OpenID Connect Service         │
+                 └───────────────┬────────────────┘
+                                 │
+               ┌─────────────────┼─────────────────┐
+               │                 │                 │
+               ▼                 ▼                 ▼
+
+     ┌────────────────┐  ┌────────────────┐  ┌─────────────────┐
+     │ PostgreSQL DB  │  │ Winston Logger │  │ Security Layer  │
+     │ Users/Roles    │  │ Rotating Logs  │  │ bcrypt + crypto │
+     │ Audit Events   │  │ Structured Log │  │ SHA-256         │
+     └────────────────┘  └────────────────┘  └─────────────────┘
+```
+
+---
+
+# Authentication Flow
+
+```text
+ ┌────────────┐
+ │    User    │
+ └─────┬──────┘
+       │
+       │ Register/Login
+       ▼
+
+┌──────────────────────┐
+│ Auth Controller      │
+│ /auth/register       │
+│ /auth/login          │
+└─────────┬────────────┘
+          │
+          ▼
+
+┌──────────────────────┐
+│ Validation Layer     │
+│ Zod Input Validation │
+└─────────┬────────────┘
+          │
+          ▼
+
+┌──────────────────────┐
+│ Password Security    │
+│ bcrypt hashing       │
+└─────────┬────────────┘
+          │
+          ▼
+
+┌──────────────────────┐
+│ JWT Token Service    │
+│ Access + Refresh     │
+└─────────┬────────────┘
+          │
+          ▼
+
+┌──────────────────────┐
+│ MFA Verification     │
+│ Google Authenticator │
+└─────────┬────────────┘
+          │
+          ▼
+
+┌──────────────────────┐
+│ Device Trust Engine  │
+│ Trusted Device Check │
+└─────────┬────────────┘
+          │
+          ▼
+
+┌──────────────────────┐
+│ Authenticated Access │
+└──────────────────────┘
+```
+
+---
+
+# RBAC Authorization Flow
+
+```text
+                    ┌────────────────┐
+                    │ Authenticated  │
+                    │ User Request   │
+                    └──────┬─────────┘
+                           │
+                           ▼
+
+                ┌─────────────────────┐
+                │ JWT Middleware      │
+                │ Verify Access Token │
+                └─────────┬───────────┘
+                          │
+                          ▼
+
+                ┌─────────────────────┐
+                │ RBAC Middleware     │
+                │ Check User Role     │
+                └─────────┬───────────┘
+                          │
+          ┌───────────────┼───────────────┐
+          │                               │
+
+          ▼                               ▼
+
+ ┌─────────────────┐          ┌──────────────────┐
+ │ Permission Match│ YES      │ Permission Denied│
+ │ Continue Request│────────▶ │ Return 403 Error │
+ └─────────────────┘          └──────────────────┘
+```
+
+---
+
+# Admin Flow
+
+```text
+                    ┌───────────────┐
+                    │     Admin     │
+                    └──────┬────────┘
+                           │
+                           ▼
+
+              ┌────────────────────────┐
+              │ Admin Authentication   │
+              │ JWT + MFA Verification │
+              └──────────┬─────────────┘
+                         │
+                         ▼
+
+              ┌────────────────────────┐
+              │ RBAC Permission Check  │
+              │ admin / super-admin    │
+              └──────────┬─────────────┘
+                         │
+       ┌─────────────────┼─────────────────┐
+       │                 │                 │
+
+       ▼                 ▼                 ▼
+
+┌──────────────┐ ┌──────────────┐ ┌────────────────┐
+│ User Control │ │ Role Control │ │ Audit Tracking │
+│ Activate     │ │ Assign       │ │ Export Logs    │
+│ Deactivate   │ │ Revoke       │ │ Compliance     │
+│ Reset PW     │ │ Permissions  │ │ Monitoring     │
+└──────────────┘ └──────────────┘ └────────────────┘
+```
+
+---
+
+# Device Trust Flow
+
+```text
+┌────────────┐
+│ User Login │
+└─────┬──────┘
+      │
+      ▼
+
+┌──────────────────────┐
+│ Device Fingerprint   │
+│ SHA-256 Hash         │
+│ UA + IP + Headers    │
+└─────────┬────────────┘
+          │
+          ▼
+
+┌──────────────────────┐
+│ Trusted Device?      │
+└───────┬──────────────┘
+        │
+   YES  │                 NO
+        │
+        ▼                 ▼
+
+┌───────────────┐   ┌────────────────┐
+│ Skip MFA Step │   │ Require MFA    │
+└───────────────┘   └────────────────┘
+```
+
+---
+
+# Security Features
+
+| Feature | Description |
+|---|---|
+| JWT Authentication | Secure stateless authentication |
+| MFA / TOTP | Google Authenticator based verification |
+| RBAC | Permission-based authorization |
+| Device Trust | Trusted device recognition |
+| bcrypt Hashing | Secure password hashing |
+| SHA-256 Fingerprinting | Device identification |
+| Zod Validation | Input schema validation |
+| Audit Logging | Full action tracking |
+| Sensitive Data Masking | Recursive masking support |
+| Global Error Handling | Prevents stack trace leaks |
+
+---
+
+# Folder Structure
+
+```text
+src/
+│
+├── config/
+├── controllers/
+├── services/
+├── repositories/
+├── middlewares/
+├── routes/
+├── validations/
+├── utils/
+├── models/
+├── docs/
+├── jobs/
+├── cache/
+└── logs/
+```
+
+---
+
+# Tech Stack
+
+## Backend
+- Node.js
+- Express.js
+- TypeScript
+- PostgreSQL
+
+---
+
+## Authentication & Security
+- JWT
+- bcrypt
+- OpenID Connect
+- MFA / TOTP
+- RBAC Authorization
+
+---
+
+## Validation & Logging
+- Zod
+- Winston Logger
+
+---
+
+## Documentation
+- Swagger / OpenAPI
+
+---
+
+# Future Improvements
+
+- Redis Session Store
+- Queue-Based Email System
+- Docker Containerization
+- CI/CD Pipeline
+- Prometheus Monitoring
+- Grafana Dashboards
+- Horizontal Scaling
+- Distributed Session Handling
+
+---
+
+# Learning Outcomes
+
+This project helped strengthen understanding of:
+
+- Enterprise Authentication Systems
+- RBAC Authorization Design
+- JWT & Refresh Token Flows
+- MFA/TOTP Implementation
+- Secure API Architecture
+- Audit Logging Systems
+- Backend Security Practices
+- TypeScript Backend Development
+- Database Query Optimization
+- Scalable Express.js Architecture
