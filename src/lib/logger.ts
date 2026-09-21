@@ -6,8 +6,11 @@ import path from "path";
 
 const { combine, timestamp, errors, json, colorize, simple } = format;
 
-const isDev = process.env.NODE_ENV !== "production";
+const env    = process.env.NODE_ENV ?? "development";
+const isDev  = env === "development";
+const isTest = env === "test";
 
+// Serverless filesystems are read-only except /tmp
 const LOG_DIR = process.env.LOG_DIR ?? (process.env.VERCEL ? "/tmp/logs" : "logs");
 
 function isWritable(dir: string): boolean {
@@ -24,12 +27,12 @@ function isWritable(dir: string): boolean {
 
 const fileTransports: transports.FileTransportInstance[] = [];
 
-if (isWritable(LOG_DIR)) {
+if (!isTest && process.env.LOG_TO_FILE !== "false" && isWritable(LOG_DIR)) {
   fileTransports.push(
     new (transports as any).DailyRotateFile({
       filename: path.join(LOG_DIR, "secureaccess-%DATE%.log"),
       datePattern: "YYYY-MM-DD",
-      maxFiles: "30d",
+      maxFiles: "14d",
       maxSize: "20m",
       zippedArchive: true,
     }),
@@ -37,22 +40,17 @@ if (isWritable(LOG_DIR)) {
       filename: path.join(LOG_DIR, "errors-%DATE%.log"),
       datePattern: "YYYY-MM-DD",
       level: "error",
-      maxFiles: "90d",
+      maxFiles: "30d",
     })
-  );
-} else {
-  // eslint-disable-next-line no-console
-  console.warn(
-    `[logger] Log directory '${LOG_DIR}' is not writable. File logging disabled. ` +
-      `Set LOG_DIR env var to a writable path (e.g., '/tmp/logs') to enable file logs.`
   );
 }
 
 export const logger = createLogger({
-  level: isDev ? "debug" : "info",
+  level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
+  silent: isTest && process.env.LOG_LEVEL === undefined,
   format: combine(timestamp(), errors({ stack: true }), json()),
   transports: [
-    // Console — colourised in dev, plain JSON in prod
+    // Console — colourised in dev, plain JSON elsewhere (what Render/Vercel log viewers expect)
     new transports.Console({
       format: isDev ? combine(colorize(), simple()) : json(),
     }),

@@ -1,0 +1,11 @@
+# Files the Vercel CLI should not upload (Git deployments only use tracked files anyway)
+.env
+.env.*
+!.env.example
+keys/
+*.pem
+logs/
+coverage/
+dist/
+tests/
+.claude/

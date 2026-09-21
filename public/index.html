@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SecureAccess Console</title>
+  <meta name="description" content="Interactive console for the SecureAccess authentication, RBAC and OpenID Connect API.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232856d8'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V9z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">◆</span> SecureAccess</a>
+    <span id="health" class="pill">Checking API…</span>
+    <nav class="toplinks" aria-label="Resources">
+      <a href="/api-docs" target="_blank" rel="noopener">API docs</a>
+      <a href="/.well-known/openid-configuration" target="_blank" rel="noopener">OIDC discovery</a>
+      <a href="https://github.com/Ramraghul/Secure_Access" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <main id="main" aria-live="polite"></main>
+
+    <aside class="log-panel" aria-label="Request log">
+      <div class="log-head">
+        <h2>Request log</h2>
+        <button id="clear-log" class="btn ghost sm" type="button">Clear</button>
+      </div>
+      <p class="muted small">Every API call this page makes. Click one to see the request and response (secrets hidden).</p>
+      <ol id="log" class="log"></ol>
+    </aside>
+  </div>
+
+  <script src="/common.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

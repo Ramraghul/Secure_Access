@@ -1,15 +1,22 @@
 {
-    "version": 2,
-    "builds": [
-        {
-            "src": "/src/server.ts",
-            "use": "@vercel/node"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "/src/server.ts"
-        }
-    ]
+  "version": 2,
+  "builds": [
+    {
+      "src": "/src/server.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "public/**",
+          "prisma/migrations/**",
+          "node_modules/swagger-ui-dist/**"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/src/server.ts"
+    }
+  ]
 }

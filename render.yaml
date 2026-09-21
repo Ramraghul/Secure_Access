@@ -1,0 +1,30 @@
+# Render Blueprint — free web service. Pair it with a free Neon (or Supabase) PostgreSQL.
+# Dashboard → New → Blueprint → select this repository, then fill in the "sync: false" values.
+services:
+  - type: web
+    name: secureaccess
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build && npx prisma migrate deploy && npm run seed:prod
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL          # Neon/Supabase connection string (with sslmode=require)
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OIDC_PRIVATE_KEY      # output of `npm run keys:generate`
+        sync: false
+      - key: PUBLIC_URL            # e.g. https://secureaccess.onrender.com
+        sync: false
+      - key: SEED_ADMIN_PASSWORD   # your private admin password
+        sync: false
+      - key: AUDIT_LOG_READS       # keep the free database small
+        value: "false"
+      - key: LOG_TO_FILE
+        value: "false"

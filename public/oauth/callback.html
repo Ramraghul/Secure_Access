@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo App · OIDC callback</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">◆</span> SecureAccess Demo App</a>
+    <span class="pill">OIDC client callback</span>
+    <nav class="toplinks"><a href="/">Back to console</a></nav>
+  </header>
+  <div class="layout">
+    <main id="callback" aria-live="polite"></main>
+    <aside class="log-panel" aria-label="Request log">
+      <div class="log-head"><h2>Request log</h2></div>
+      <p class="muted small">Calls made by the demo app.</p>
+      <ol id="log" class="log"></ol>
+    </aside>
+  </div>
+  <script src="/common.js"></script>
+  <script src="/oauth/callback.js"></script>
+</body>
+</html>

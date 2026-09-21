@@ -1,7 +1,19 @@
 node_modules/
 dist/
-*.env
-*.env.example
-*.log
+coverage/
 logs/
-prisma/migrations/
+*.log
+
+# Environment — never commit real secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.test
+
+# Signing keys (use OIDC_PRIVATE_KEY env var instead)
+keys/
+*.pem
+
+.vercel
+.DS_Store
