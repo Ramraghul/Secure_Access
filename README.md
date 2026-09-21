@@ -6,14 +6,16 @@
 ![Node](https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-216%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-219%20passing-brightgreen)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 SecureAccess is the "security guard" layer an application sits behind. It handles who a user is (registration, login, MFA), what they may do (roles and permissions), what they did (audit trail), and lets other apps offer **"Sign in with SecureAccess"** via OpenID Connect.
 
-It ships with an **interactive console** that calls the real API and shows every request, **Swagger UI**, **216 automated tests**, and one-click deployment configs for **free hosting**.
+It ships with an **interactive console** that calls the real API and shows every request, **Swagger UI**, **219 automated tests**, and one-click deployment configs for **free hosting**.
 
-> **Live demo:** `https://<your-deployment>` · Demo logins: `auditor@secureaccess.dev` / `Auditor!Demo#2026` (read-only admin) and `demo@secureaccess.dev` / `DemoUser!Try#2026`
+> **Live demo:** https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/ · [Swagger UI](https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/api-docs/) · [Health](https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/health)
+>
+> Demo logins: `auditor@secureaccess.dev` / `Auditor!Demo#2026` (read-only admin) and `demo@secureaccess.dev` / `DemoUser!Try#2026`
 
 ---
 
@@ -108,12 +110,12 @@ npm run seed
 npm run dev
 ```
 
-| Open | URL |
-|---|---|
-| Interactive console | http://localhost:4000/ |
-| Swagger UI | http://localhost:4000/api-docs/ |
-| Health check | http://localhost:4000/health |
-| OIDC discovery | http://localhost:4000/.well-known/openid-configuration |
+| Open | Local | Deployed (Vercel) |
+|---|---|---|
+| Interactive console | http://localhost:4000/ | https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/ |
+| Swagger UI | http://localhost:4000/api-docs/ | https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/api-docs/ |
+| Health check | http://localhost:4000/health | https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/health |
+| OIDC discovery | http://localhost:4000/.well-known/openid-configuration | https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/.well-known/openid-configuration |
 
 <details>
 <summary>Run everything in Docker instead</summary>
@@ -142,7 +144,7 @@ A demo OpenID Connect client, `secureaccess-demo`, is also registered.
 
 **Console** — sign in with a demo account, then explore the tabs: tokens and claims, MFA enrolment, devices and sessions, users, roles, the audit log, and a full OpenID Connect sign-in you can watch step by step. The **Request log** panel shows each API call with secrets hidden.
 
-**Swagger UI** — run `POST /api/v1/auth/login`, copy `accessToken`, click **Authorize**, paste it, and try any endpoint.
+**Swagger UI** — pick **Local** or **Deployed** in the *Servers* dropdown, run `POST /api/v1/auth/login`, copy `accessToken`, click **Authorize**, paste it, and try any endpoint.
 
 **curl**
 
@@ -151,6 +153,8 @@ curl -s -X POST http://localhost:4000/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"auditor@secureaccess.dev","password":"Auditor!Demo#2026"}'
 ```
+
+To call the live deployment instead, replace `http://localhost:4000` with `https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app`.
 
 See **[docs/API.md](docs/API.md)** for every endpoint, examples, the error catalogue and a curl walkthrough.
 
@@ -193,8 +197,8 @@ secureaccess/
 │   └── migrations/            # v2 baseline + v3 migration
 ├── public/                    # console (index.html, app.js), OAuth consent & callback pages
 ├── tests/
-│   ├── unit/                  # 100 tests, no database
-│   └── integration/           # 116 tests, real HTTP + PostgreSQL
+│   ├── unit/                  # 101 tests, no database
+│   └── integration/           # 118 tests, real HTTP + PostgreSQL
 ├── docs/                      # FLOWS · API · SECURITY · TESTING · DEPLOYMENT
 ├── scripts/generate-keys.ts   # RSA key for OIDC_PRIVATE_KEY
 ├── Dockerfile · docker-compose.yml · render.yaml · vercel.json
@@ -228,7 +232,7 @@ docker compose up -d db
 npm test
 ```
 
-**216 tests** — unit tests for every security primitive (including the RFC 7636 PKCE vector) and integration tests that exercise real flows against PostgreSQL: lockout, MFA replay, refresh-token reuse, RBAC changes taking effect, audit masking, the full OIDC code flow with JWKS signature verification, and a check that **every route is documented in the OpenAPI spec**. Details: **[docs/TESTING.md](docs/TESTING.md)**.
+**219 tests** — unit tests for every security primitive (including the RFC 7636 PKCE vector) and integration tests that exercise real flows against PostgreSQL: lockout, MFA replay, refresh-token reuse, RBAC changes taking effect, audit masking, the full OIDC code flow with JWKS signature verification, and a check that **every route is documented in the OpenAPI spec**. Details: **[docs/TESTING.md](docs/TESTING.md)**.
 
 ## Deployment (free)
 
@@ -262,7 +266,7 @@ Threat model, design decisions, the 17 vulnerabilities fixed from v2, and known 
 | Audit | Tokens and MFA secrets stored in plaintext; only authenticated routes | Deep masking; every request incl. failed auth; semantic events; purge |
 | OpenID Connect | Stub endpoints returning tokens for a fake user | Real Authorization Code + PKCE provider, RS256, JWKS, UserInfo, revocation |
 | Docs | Swagger blank on Vercel, spec out of date | Swagger UI served from `swagger-ui-dist` and bundled for Vercel; spec validated and route coverage tested |
-| Tests | None | 216 unit + integration tests, CI |
+| Tests | None | 219 unit + integration tests, CI |
 | Console | None | Interactive console, consent and callback pages |
 | Deployment | Vercel only | Render + Neon blueprint, Docker, Vercel |
 
@@ -283,7 +287,7 @@ Threat model, design decisions, the 17 vulnerabilities fixed from v2, and known 
 | Item | Status |
 |---|---|
 | Docker containerization | ✅ Done in v3 — `Dockerfile`, `docker-compose.yml` |
-| CI/CD pipeline | ✅ Done in v3 — GitHub Actions: typecheck, 216 tests, build |
+| CI/CD pipeline | ✅ Done in v3 — GitHub Actions: typecheck, 219 tests, build |
 | Distributed session handling | ✅ Done in v3 — sessions live in PostgreSQL, so any instance can validate or revoke them |
 | Redis store | Planned — shared rate-limit counters and a session cache for multi-instance deployments |
 | Queue-based email system | Planned — email verification, password-reset links and emailed sign-in codes as a second factor |

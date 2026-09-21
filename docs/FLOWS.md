@@ -4,7 +4,7 @@ This guide walks through every process in the system, in the order a request act
 Each section has a plain-English explanation, the exact steps, a diagram, and a way to try it yourself.
 
 > Diagrams use [Mermaid](https://mermaid.js.org/) and render automatically on GitHub.
-> The quickest way to *see* these flows is the console at `http://localhost:4000/` — its **Request log** panel shows every call.
+> The quickest way to *see* these flows is the console — locally at `http://localhost:4000/` or live at https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/ — its **Request log** panel shows every call.
 
 ## Contents
 

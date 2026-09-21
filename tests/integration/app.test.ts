@@ -2,6 +2,7 @@ import SwaggerParser from "@apidevtools/swagger-parser";
 import { apiRouters, API_PREFIX } from "../../src/app";
 import { openApiSpec } from "../../src/swagger/openapi";
 import { localMigrations, pendingMigrations, prismaClientIsStale } from "../../src/lib/migrations";
+import { config } from "../../src/config";
 import { api, closeAll } from "./helpers";
 
 afterAll(closeAll);
@@ -88,6 +89,34 @@ describe("OpenAPI documentation", () => {
     }
 
     expect(missing).toEqual([]);
+  });
+
+  it("offers Local and Deployed servers, listing the current host first", async () => {
+    const onTestHost = await api().get("/swagger.json");
+    expect(onTestHost.body.servers[0].description).toBe("This server"); // supertest's 127.0.0.1:<port>
+    expect(onTestHost.body.servers.slice(1)).toEqual([
+      { url: config.urls.local,    description: "Local (localhost)" },
+      { url: config.urls.deployed, description: "Deployed (Vercel)" },
+    ]);
+
+    const onLocal = await api().get("/swagger.json").set("Host", new URL(config.urls.local).host);
+    expect(onLocal.body.servers.map((s: { url: string }) => s.url)).toEqual([config.urls.local, config.urls.deployed]);
+
+    const onDeployed = await api().get("/swagger.json")
+      .set("Host", new URL(config.urls.deployed).host)
+      .set("X-Forwarded-Proto", "https");
+    expect(onDeployed.body.servers.map((s: { url: string }) => s.url)).toEqual([config.urls.deployed, config.urls.local]);
+  });
+
+  it("lets Swagger UI call both servers and embeds the server list", async () => {
+    const page = await api().get("/api-docs/");
+    const connectSrc = page.headers["content-security-policy"].split(";").find((d: string) => d.trim().startsWith("connect-src"));
+    expect(connectSrc).toContain(config.urls.local);
+    expect(connectSrc).toContain(config.urls.deployed);
+
+    const init = await api().get("/api-docs/swagger-ui-init.js");
+    expect(init.text).toContain(config.urls.deployed);
+    expect(init.text).toContain(config.urls.local);
   });
 
   it("redirects /api-docs to /api-docs/ so relative asset URLs resolve", async () => {

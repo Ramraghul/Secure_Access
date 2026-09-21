@@ -39,6 +39,12 @@ export const config = {
   publicUrl: optional("PUBLIC_URL", "").replace(/\/+$/, ""),
   trustProxy: int("TRUST_PROXY", 1),
 
+  // Base URLs offered in the Swagger "Servers" dropdown
+  urls: {
+    local:    optional("LOCAL_URL", `http://localhost:${int("PORT", 4000)}`).replace(/\/+$/, ""),
+    deployed: optional("DEPLOYED_URL", "https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app").replace(/\/+$/, ""),
+  },
+
   db: {
     url: required("DATABASE_URL"),
   },

@@ -1,6 +1,6 @@
 # Testing Guide
 
-SecureAccess has **216 automated tests**: 100 fast unit tests and 116 integration tests that drive the real Express app against a real PostgreSQL database. Every pull request runs them in GitHub Actions.
+SecureAccess has **219 automated tests**: 101 fast unit tests and 118 integration tests that drive the real Express app against a real PostgreSQL database. Every pull request runs them in GitHub Actions.
 
 Current coverage (`npm run test:coverage`): **93% statements · 77% branches · 95% functions · 94% lines**.
 
@@ -112,7 +112,7 @@ Jest is configured with two **projects** (`jest.config.js`) so unit tests never 
 | `devices.test.ts` | One device per browser · current device · trusting needs MFA + a current code and lasts 30 days · untrust · removing a device signs out its sessions · other users' devices are 404 · id validation |
 | `audit.test.ts` | Login success/failure rows with the right user and event · anonymous failures · unauthenticated requests audited · **passwords, tokens, MFA secrets and backup codes never stored** · list filters · email search · sensitive filter · statistics · CSV export · purge · auditor vs user permissions |
 | `openid.test.ts` | Discovery (root + alias) · JWKS importable · authorize redirects, never redirects to unknown clients/URIs, errors returned to client · consent details, auth required, denial · **full code + PKCE flow with id_token verified against JWKS** · first-party vs OIDC tokens isolated · scope-based claims · wrong verifier/redirect · expired code · **code replay revokes issued tokens** · refresh rotation and reuse · revocation · OIDC sessions listed · grant validation · confidential client with HTTP Basic · client permissions |
-| `app.test.ts` | Health with DB + migration check · no pending migrations · API index · JSON 404 · security headers · CORS preflight · console pages served · **OpenAPI document is valid** · **every Express route is documented in the spec** · `/api-docs` → `/api-docs/` redirect · Swagger UI assets served locally with the spec embedded |
+| `app.test.ts` | Health with DB + migration check · no pending migrations · API index · JSON 404 · security headers · CORS preflight · console pages served · **OpenAPI document is valid** · **every Express route is documented in the spec** · `/api-docs` → `/api-docs/` redirect · Local/Deployed servers with the current host first · Swagger UI assets served locally with the spec embedded |
 
 The "every route is documented" test walks the Express routers and fails if someone adds an endpoint without describing it in `src/swagger/openapi.ts`, so the docs cannot drift from the code.
 
@@ -211,7 +211,7 @@ it("lets an admin read a user", async () => {
 
 ### With the console
 
-1. `npm run dev` → open `http://localhost:4000/`.
+1. `npm run dev` → open `http://localhost:4000/` (or try the live deployment: https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/).
 2. Sign in with `auditor@secureaccess.dev` / `Auditor!Demo#2026` and browse Users, Roles and Audit — watch the Request log.
 3. Register a new account, enable MFA with an authenticator app, sign out, sign in again and complete the MFA step.
 4. **OpenID Connect** tab → run the demo sign-in and check that every step on the callback page is ticked.

@@ -193,11 +193,28 @@ OIDC client ready: secureaccess-demo
 
 ## 8. Step 6 — Set PUBLIC_URL and redeploy
 
-1. Copy your production domain from the project **Overview**, e.g. `https://secure-access-kappa.vercel.app`.
+1. Copy your production domain from the project **Overview** or **Settings → Domains** (current deployment: `https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app`).
 2. **Settings → Environment Variables → `PUBLIC_URL`** = that URL (no trailing slash), **Production only**.
 3. **Deployments → ⋯ (latest) → Redeploy**.
 
 `PUBLIC_URL` becomes the OpenID Connect **issuer**. It also enables the CSP `upgrade-insecure-requests` directive for HTTPS. Preview deployments leave it unset so the issuer follows each preview's own URL.
+
+Also set `DEPLOYED_URL` (any environment, including your local `.env`) to the same domain. It is the *Deployed* entry in Swagger's **Servers** dropdown.
+
+### Make the site public (Deployment Protection)
+
+New Vercel projects protect deployments with **Vercel Authentication**: visitors are redirected to `vercel.com/sso-api` and must log in to *your* Vercel account — portfolio visitors would only see a login page.
+
+1. **Settings → Deployment Protection → Vercel Authentication** → **Disabled** (or keep it for preview deployments only).
+2. Share the **production domain** (Settings → Domains). Per-deployment URLs such as `secure-access-a8j6fkex8-ramraghuls-projects.vercel.app` change on every deploy.
+
+Check it the way a visitor would:
+
+```bash
+curl -I https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/health
+```
+
+`HTTP/2 200` means public; `302` with `location: https://vercel.com/sso-api` means still protected.
 
 ---
 
@@ -206,7 +223,7 @@ OIDC client ready: secureaccess-demo
 Replace `APP` with your domain.
 
 ```bash
-APP=https://your-project.vercel.app
+APP=https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app
 ```
 
 ```bash
@@ -383,6 +400,7 @@ Useful extras:
 | Symptom | Cause | Fix |
 |---|---|---|
 | Build log: `P1001 Can't reach database server` | Supabase **direct** host (IPv6-only) or wrong password | Use the **session pooler** URL from step 1 |
+| Build log: `SEED_ADMIN_PASSWORD is too weak: …` | The admin password breaks a rule — often it contains `admin` | Change `SEED_ADMIN_PASSWORD` in Settings → Environment Variables (12+ chars, upper, lower, digit, symbol, none of `password` `123456` `qwerty` `admin` `letmein`), then **Redeploy**. Migrations already applied are skipped. |
 | Build log: `P3005 The database schema is not empty` | Existing DB created without migrations | Baseline — [section 10](#10-updating-an-existing-v2-vercel-deployment) |
 | Runtime: `The column users.isProtected does not exist` / `503 SCHEMA_OUT_OF_DATE` | Migrations not applied to that database | `npx prisma migrate deploy` against it, then redeploy |
 | `/health` shows `"migrations": "pending"` | Same as above | Same as above |
@@ -393,3 +411,5 @@ Useful extras:
 | `too many connections` / `MaxClientsInSessionMode` | Connection pool exhausted | Add `connection_limit=1` to `DATABASE_URL` |
 | Admin password unknown | Seed generated it | Find it in the first build log, or set `SEED_ADMIN_EMAIL` to a new address and redeploy |
 | Requests are slow (~1 s each) | Function region far from the database | Settings → Functions → set the database's region |
+| Every URL redirects to `vercel.com/sso-api` / visitors see a Vercel login | Deployment Protection (Vercel Authentication) is on | Settings → Deployment Protection → disable it — see [step 6](#8-step-6--set-public_url-and-redeploy) |
+| Swagger *Deployed* server fails from the local docs | Deployment still protected, or `DEPLOYED_URL` points at an old per-deployment URL | Make the site public and set `DEPLOYED_URL` to the production domain |

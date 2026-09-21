@@ -1,6 +1,6 @@
 # API Reference
 
-The interactive, always-current reference is **Swagger UI at `/api-docs`** (raw spec: `/swagger.json`).
+The interactive, always-current reference is **Swagger UI** — [local](http://localhost:4000/api-docs/) or [deployed](https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/api-docs/) (raw spec: `/swagger.json`). Its *Servers* dropdown switches between Local and Deployed.
 This page is a readable companion: conventions, every endpoint grouped by feature, request/response examples, and the complete error catalogue.
 
 ## Contents
@@ -24,6 +24,7 @@ This page is a readable companion: conventions, every endpoint grouped by featur
 
 | Topic | Rule |
 |---|---|
+| Base URLs | Local `http://localhost:4000` · Deployed `https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app` |
 | Base path | `/api/v1` (except `/health`, `/.well-known/openid-configuration`, `/swagger.json`, `/api-docs`) |
 | Format | JSON request and response bodies (`Content-Type: application/json`). The OIDC token and revoke endpoints also accept `application/x-www-form-urlencoded`. |
 | Authentication | `Authorization: Bearer <accessToken>` |
@@ -475,7 +476,7 @@ OAuth endpoints (`/openid/authorize`, `/consent`, `/token`, `/userinfo`, `/revok
 Copy these one at a time. They need `node` only to pull fields out of JSON.
 
 ```bash
-BASE=http://localhost:4000/api/v1
+BASE=http://localhost:4000/api/v1   # or https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app/api/v1 for the live deployment
 json() { node -pe "JSON.parse(require('fs').readFileSync(0)).$1"; }
 ```
 

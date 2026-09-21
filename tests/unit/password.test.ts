@@ -18,7 +18,8 @@ describe("isStrongPassword", () => {
     ["no digit",           "NoDigits!Anywhere",  "At least one number"],
     ["no symbol",          "NoSymbols1234Here",  "At least one special character"],
     ["4 repeated chars",   "Aaaaa!bcdef12345",   "No more than 3 repeated characters in a row"],
-    ["common weak word",   "MyPassword!2026xx",  "Contains common weak patterns"],
+    ["common weak word",   "MyPassword!2026xx",  "Contains common weak patterns: password"],
+    ["two weak words",     "Admin!Qwerty2026x",  "Contains common weak patterns: qwerty, admin"],
   ])("rejects a password with %s", (_label, password, expectedError) => {
     const result = isStrongPassword(password);
     expect(result.valid).toBe(false);

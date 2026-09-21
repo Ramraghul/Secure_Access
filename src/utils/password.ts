@@ -27,8 +27,8 @@ export function isStrongPassword(password: string): { valid: boolean; errors: st
   if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]/.test(password))
     errors.push("At least one special character");
   if (/(.)\1{3,}/.test(password))    errors.push("No more than 3 repeated characters in a row");
-  if (WEAK_PATTERNS.some(w => password.toLowerCase().includes(w)))
-    errors.push("Contains common weak patterns");
+  const weak = WEAK_PATTERNS.filter(w => password.toLowerCase().includes(w));
+  if (weak.length > 0) errors.push(`Contains common weak patterns: ${weak.join(", ")}`);
 
   return { valid: errors.length === 0, errors };
 }

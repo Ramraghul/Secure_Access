@@ -47,6 +47,8 @@ export const openApiSpec = {
       "trusted devices, rotating refresh tokens with reuse detection, permission-based RBAC, a masked audit trail,",
       "and an OpenID Connect provider (Authorization Code + PKCE).",
       "",
+      "**Servers:** pick *Local* (`http://localhost:4000`) or *Deployed* (Vercel) in the **Servers** dropdown below — the server these docs were opened on is selected by default.",
+      "",
       "**Quick start:** call `POST /api/v1/auth/login`, copy `accessToken`, click **Authorize** and paste it.",
       "Access tokens last 15 minutes; use `POST /api/v1/auth/refresh` with the `refreshToken` for a new pair.",
       "",

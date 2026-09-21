@@ -77,7 +77,10 @@ export async function seed(prisma: PrismaClient, log: (msg: string) => void = co
         password = DEFAULT_ADMIN_PASSWORD;
       }
     } else if (!isStrongPassword(password).valid) {
-      throw new Error(`SEED_ADMIN_PASSWORD is too weak: ${isStrongPassword(password).errors.join(", ")}`);
+      throw new Error(
+        `SEED_ADMIN_PASSWORD is too weak: ${isStrongPassword(password).errors.join("; ")}. ` +
+        "Use 12+ characters with upper and lower case, a digit and a symbol, and none of: password, 123456, qwerty, admin, letmein.",
+      );
     }
 
     const admin = await prisma.user.create({

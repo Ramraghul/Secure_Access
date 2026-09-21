@@ -240,6 +240,8 @@ For a portfolio, share the console URL and the two demo accounts. Keep the admin
 | `NODE_ENV` | | `development` | `production` in deployments |
 | `PORT` | | `4000` | Render/Docker set this automatically |
 | `PUBLIC_URL` | recommended | derived from request | Base URL, used as OIDC issuer; enables CSP `upgrade-insecure-requests` when https |
+| `LOCAL_URL` | | `http://localhost:<PORT>` | *Local* entry in Swagger's Servers dropdown |
+| `DEPLOYED_URL` | | `https://secure-access-a8j6fkex8-ramraghuls-projects.vercel.app` | *Deployed* entry in Swagger's Servers dropdown |
 | `TRUST_PROXY` | | `1` | Number of proxies in front of the app |
 | `OIDC_PRIVATE_KEY` | recommended (required on Vercel) | ephemeral key | RSA key (PEM or base64 PEM) for RS256 OIDC tokens |
 | `JWT_EXPIRES_IN` | | `15m` | Access token lifetime |
@@ -279,6 +281,7 @@ For a portfolio, share the console URL and the two demo accounts. Keep the admin
 | Symptom | Cause | Fix |
 |---|---|---|
 | Build fails at `prisma migrate deploy` with P1001 | Database unreachable | Check `DATABASE_URL`, `sslmode=require`, Neon project not deleted |
+| Build fails with `SEED_ADMIN_PASSWORD is too weak: …` | The admin password breaks a rule — often it contains `admin` | Pick one with 12+ chars, upper, lower, digit, symbol and none of `password` `123456` `qwerty` `admin` `letmein`, then redeploy |
 | `Unknown argument …` (`PrismaClientValidationError`) | The running process loaded a Prisma Client generated from an older `schema.prisma` | `npx prisma generate`, then restart the server (`npm run dev` does both; deployments run `prisma generate` during the build) |
 | `P3005 The database schema is not empty` | v2 DB created with `db push` | See [section 7](#7-upgrading-an-existing-v2-database) |
 | `The column … does not exist`, `503 SCHEMA_OUT_OF_DATE`, or `/health` shows `migrations: pending` | Code deployed without running migrations | `npx prisma migrate deploy` against that database, then `npm run seed` |
