@@ -278,6 +278,33 @@ Threat model, design decisions, the 17 vulnerabilities fixed from v2, and known 
 | [docs/VERCEL.md](docs/VERCEL.md) | Vercel deployment, step by step with diagrams |
 | `/api-docs` | Interactive OpenAPI documentation |
 
+## Future improvements
+
+| Item | Status |
+|---|---|
+| Docker containerization | ✅ Done in v3 — `Dockerfile`, `docker-compose.yml` |
+| CI/CD pipeline | ✅ Done in v3 — GitHub Actions: typecheck, 216 tests, build |
+| Distributed session handling | ✅ Done in v3 — sessions live in PostgreSQL, so any instance can validate or revoke them |
+| Redis store | Planned — shared rate-limit counters and a session cache for multi-instance deployments |
+| Queue-based email system | Planned — email verification, password-reset links and emailed sign-in codes as a second factor |
+| Prometheus monitoring + Grafana dashboards | Planned |
+| Horizontal scaling | Planned — needs the Redis store for rate limits |
+
+## Learning outcomes
+
+This project helped strengthen understanding of:
+
+- Enterprise authentication systems and server-side session design
+- RBAC authorization design with wildcard permissions
+- JWT access tokens and rotating refresh tokens with reuse detection
+- MFA/TOTP implementation, backup codes and trusted devices
+- OAuth 2.0 / OpenID Connect (Authorization Code + PKCE, RS256, JWKS)
+- Secure API architecture and threat modelling
+- Audit logging with secret masking
+- TypeScript backend development with Prisma and PostgreSQL
+- Testing against a real database, and CI
+- Deploying on free tiers (Vercel serverless, Render, Docker)
+
 ## License
 
 [MIT](LICENSE) © Raghul
